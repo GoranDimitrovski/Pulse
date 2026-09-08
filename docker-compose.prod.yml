@@ -1,0 +1,12 @@
+# Extra hardening for an actual deployed instance — not layered in for local dev,
+# since a writable/full-capability filesystem is what the dev container needs
+# (npm installs into mounted volumes, tsx's watch cache, etc.).
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  app:
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp

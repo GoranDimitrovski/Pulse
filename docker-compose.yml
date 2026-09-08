@@ -1,0 +1,56 @@
+name: pulse-node
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pulse}
+      POSTGRES_DB: ${POSTGRES_DB:-pulse}
+    volumes:
+      - pulse-postgres-data:/var/lib/postgresql/data
+    # No host port published here: this file is also the "production-shaped" stack,
+    # and the database shouldn't be reachable from outside the docker network there.
+    # docker-compose.dev.yml re-adds a host port for local GUI/psql access.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-pulse} -d ${POSTGRES_DB:-pulse}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - pulse-net
+
+  app:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - .env
+    environment:
+      # Overrides .env's host-facing DATABASE_URL: from inside the docker network the
+      # database is reached as 'postgres', not 'localhost'.
+      DATABASE_URL: postgres://${POSTGRES_USER:-pulse}:${POSTGRES_PASSWORD:-pulse}@postgres:5432/${POSTGRES_DB:-pulse}
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Matches the app's own graceful-shutdown sequence (stop scheduler → event
+    # subscribers → WebSocket connections → HTTP server → DB pool) enough headroom
+    # to finish before Docker sends SIGKILL.
+    stop_grace_period: 15s
+    networks:
+      - pulse-net
+
+networks:
+  pulse-net:
+    driver: bridge
+
+volumes:
+  pulse-postgres-data:

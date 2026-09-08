@@ -1,0 +1,40 @@
+services:
+  postgres:
+    # Host access for local GUI clients / psql — not published in the base file,
+    # which also serves as the production-shaped stack.
+    ports:
+      - '5433:5432'
+
+  app:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - pulse-node-modules:/app/node_modules
+      - pulse-web-node-modules:/app/web/node_modules
+    command: npm run dev
+    ports:
+      - '3000:3000'
+      - '9229:9229'
+
+  web:
+    image: node:24-alpine
+    working_dir: /app/web
+    environment:
+      VITE_BACKEND_HOST: app:3000
+    volumes:
+      - ./web:/app/web
+      - pulse-web-node-modules:/app/web/node_modules
+    command: sh -c "npm install -g npm@12.0.2 && npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - '5173:5173'
+    depends_on:
+      - app
+    networks:
+      - pulse-net
+
+volumes:
+  pulse-node-modules:
+  pulse-web-node-modules:

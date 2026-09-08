@@ -1,0 +1,35 @@
+# Optional Prometheus + Grafana stack.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+services:
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    restart: unless-stopped
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - pulse-prometheus-data:/prometheus
+    ports:
+      - '9090:9090'
+    networks:
+      - pulse-net
+
+  grafana:
+    image: grafana/grafana:13.2.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - pulse-grafana-data:/var/lib/grafana
+    ports:
+      - '3300:3000'
+    depends_on:
+      - prometheus
+    networks:
+      - pulse-net
+
+volumes:
+  pulse-prometheus-data:
+  pulse-grafana-data:
