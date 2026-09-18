@@ -1,5 +1,4 @@
-import type { RecordCheckResultUseCase } from '../../application/use-cases/checks/record-check-result.use-case.js';
-import type { IHealthCheckerFactory } from '../../application/ports/health-checker.port.js';
+import type { RunCheckUseCase } from '../../application/use-cases/checks/run-check.use-case.js';
 import type { Target } from '../../domain/entities/target.entity.js';
 import type { ITargetRepository } from '../../domain/repositories/target.repository.js';
 import type { Logger } from '../logging/logger.js';
@@ -22,8 +21,7 @@ export class CheckScheduler {
 
   constructor(
     private readonly targets: ITargetRepository,
-    private readonly checkerFactory: IHealthCheckerFactory,
-    private readonly recordCheckResult: RecordCheckResultUseCase,
+    private readonly runCheck: RunCheckUseCase,
     private readonly circuitBreakers: CircuitBreakerRegistry,
     private readonly pool: WorkerPool,
     private readonly logger: Logger,
@@ -59,53 +57,34 @@ export class CheckScheduler {
       if (now < dueAt) continue;
 
       this.nextRunAt.set(target.id, now + target.intervalSeconds * 1000);
-      this.pool.run(() => this.runCheck(target)).catch((error: unknown) => {
-        this.logger.error({ targetId: target.id, error }, 'Unhandled error running check');
-      });
+      this.pool
+        .run(() => this.dispatch(target))
+        .catch((error: unknown) => {
+          this.logger.error({ targetId: target.id, error }, 'Unhandled error running check');
+        });
     }
   }
 
-  private async runCheck(target: Target): Promise<void> {
+  /** Breaker + metrics + logging around one RunCheckUseCase call. Recording the result is its job, not ours. */
+  private async dispatch(target: Target): Promise<void> {
     const breaker = this.circuitBreakers.getFor(target.id);
     const stopTimer = this.metrics.checkDurationSeconds.startTimer({ type: target.type });
 
     try {
-      const outcome = await breaker.execute(() =>
-        this.checkerFactory.getChecker(target.type).check(target),
-      );
-      stopTimer();
-      this.metrics.checksTotal.inc({ type: target.type, status: outcome.status });
-
-      await this.recordCheckResult.execute({
-        tenantId: target.tenantId,
-        targetId: target.id,
-        targetName: target.name,
-        status: outcome.status,
-        latencyMs: outcome.latencyMs,
-        message: outcome.message,
-      });
+      const status = await breaker.execute(() => this.runCheck.execute(target));
+      this.metrics.checksTotal.inc({ type: target.type, status });
     } catch (error) {
-      stopTimer();
-      const message = error instanceof CircuitOpenError ? 'Circuit breaker open' : 'Check failed unexpectedly';
-      this.logger.warn({ targetId: target.id, error }, message);
-
-      if (!(error instanceof CircuitOpenError)) {
+      const open = error instanceof CircuitOpenError;
+      this.logger.warn(
+        { targetId: target.id, error },
+        open ? 'Circuit breaker open' : 'Check failed unexpectedly',
+      );
+      // An open circuit means nothing ran, so there is no outcome to count.
+      if (!open) {
         this.metrics.checksTotal.inc({ type: target.type, status: 'down' });
-        // Best-effort: the target may have been deleted concurrently, which would make
-        // this insert fail too (FK violation) — that's fine, nothing left to record for it.
-        await this.recordCheckResult
-          .execute({
-            tenantId: target.tenantId,
-            targetId: target.id,
-            targetName: target.name,
-            status: 'down',
-            latencyMs: null,
-            message,
-          })
-          .catch((recordError: unknown) => {
-            this.logger.warn({ targetId: target.id, error: recordError }, 'Failed to record check failure');
-          });
       }
+    } finally {
+      stopTimer();
     }
   }
 }

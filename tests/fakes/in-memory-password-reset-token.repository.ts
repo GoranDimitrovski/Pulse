@@ -10,7 +10,12 @@ export class InMemoryPasswordResetTokenRepository implements IPasswordResetToken
   readonly tokens: PasswordResetToken[] = [];
 
   async create(input: CreatePasswordResetTokenInput): Promise<PasswordResetToken> {
-    const token = new PasswordResetToken({ id: randomUUID(), usedAt: null, createdAt: new Date(), ...input });
+    const token = new PasswordResetToken({
+      id: randomUUID(),
+      usedAt: null,
+      createdAt: new Date(),
+      ...input,
+    });
     this.tokens.push(token);
     return token;
   }
@@ -19,8 +24,8 @@ export class InMemoryPasswordResetTokenRepository implements IPasswordResetToken
     return this.tokens.find((t) => t.tokenHash === tokenHash) ?? null;
   }
 
-  async markUsed(id: string): Promise<void> {
-    const index = this.tokens.findIndex((t) => t.id === id);
+  async markUsed(tenantId: string, id: string): Promise<void> {
+    const index = this.tokens.findIndex((t) => t.tenantId === tenantId && t.id === id);
     if (index !== -1) {
       this.tokens[index] = new PasswordResetToken({ ...this.tokens[index]!, usedAt: new Date() });
     }

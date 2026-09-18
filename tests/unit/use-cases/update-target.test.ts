@@ -50,8 +50,8 @@ describe('UpdateTargetUseCase', () => {
 
   it('throws NotFoundError for a target that does not exist', async () => {
     const useCase = new UpdateTargetUseCase(new InMemoryTargetRepository());
-    await expect(useCase.execute('tenant-1', 'missing-id', { enabled: false })).rejects.toBeInstanceOf(
-      NotFoundError,
-    );
+    await expect(
+      useCase.execute('tenant-1', 'missing-id', { enabled: false }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

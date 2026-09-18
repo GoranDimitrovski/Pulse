@@ -6,3 +6,15 @@ coverage/
 web/dist/
 web/node_modules/
 .DS_Store
+.claude/cache/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+*.tfvars.json
+
+# Helm
+chart/**/charts/
+chart/**/*.tgz

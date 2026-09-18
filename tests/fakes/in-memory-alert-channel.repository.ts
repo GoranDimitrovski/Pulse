@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { AlertChannel } from '../../src/domain/entities/alert-channel.entity.js';
+import { AlertChannel } from '../../src/domain/entities/alert-channel.entity.js';
 import type {
   CreateAlertChannelInput,
   IAlertChannelRepository,
@@ -10,7 +10,7 @@ export class InMemoryAlertChannelRepository implements IAlertChannelRepository {
   readonly channels: AlertChannel[] = [];
 
   async create(input: CreateAlertChannelInput): Promise<AlertChannel> {
-    const channel: AlertChannel = { id: randomUUID(), createdAt: new Date(), ...input };
+    const channel = new AlertChannel({ id: randomUUID(), createdAt: new Date(), ...input });
     this.channels.push(channel);
     return channel;
   }

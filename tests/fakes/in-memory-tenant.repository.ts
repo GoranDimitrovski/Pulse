@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { Tenant } from '../../src/domain/entities/tenant.entity.js';
+import { Tenant } from '../../src/domain/entities/tenant.entity.js';
 import type {
   CreateTenantInput,
   ITenantRepository,
@@ -10,7 +10,7 @@ export class InMemoryTenantRepository implements ITenantRepository {
   readonly tenants: Tenant[] = [];
 
   async create(input: CreateTenantInput): Promise<Tenant> {
-    const tenant: Tenant = { id: randomUUID(), createdAt: new Date(), ...input };
+    const tenant = new Tenant({ id: randomUUID(), createdAt: new Date(), ...input });
     this.tenants.push(tenant);
     return tenant;
   }

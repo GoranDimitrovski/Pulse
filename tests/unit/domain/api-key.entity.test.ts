@@ -22,10 +22,16 @@ function makeKey(overrides: Partial<{ revokedAt: Date | null }> = {}): ApiKey {
   });
 }
 
-describe('ApiKey', () => {
+describe('ApiKey aggregate', () => {
   it('is not revoked by default, revoked once revokedAt is set', () => {
     expect(makeKey().isRevoked()).toBe(false);
     expect(makeKey({ revokedAt: new Date() }).isRevoked()).toBe(true);
+  });
+
+  it('toPublic omits the stored hash', () => {
+    const publicKey = makeKey().toPublic();
+    expect('keyHash' in publicKey).toBe(false);
+    expect(publicKey.keyPrefix).toBe('pk_abc123');
   });
 
   it('matchesHash is true only for the exact hash', () => {

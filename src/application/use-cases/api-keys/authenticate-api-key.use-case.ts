@@ -1,8 +1,6 @@
-import type { ApiKey } from '../../../domain/entities/api-key.entity.js';
+import { KEY_PREFIX_LENGTH, type ApiKey } from '../../../domain/entities/api-key.entity.js';
 import type { IApiKeyRepository } from '../../../domain/repositories/api-key.repository.js';
 import type { ITokenService } from '../../ports/token-service.port.js';
-
-const KEY_PREFIX_LENGTH = 8;
 
 export class AuthenticateApiKeyUseCase {
   constructor(

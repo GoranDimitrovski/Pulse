@@ -17,7 +17,11 @@ export class DrizzleApiKeyRepository implements IApiKeyRepository {
   }
 
   async findByPrefix(keyPrefix: string): Promise<ApiKey | null> {
-    const [row] = await this.db.select().from(apiKeys).where(eq(apiKeys.keyPrefix, keyPrefix)).limit(1);
+    const [row] = await this.db
+      .select()
+      .from(apiKeys)
+      .where(eq(apiKeys.keyPrefix, keyPrefix))
+      .limit(1);
     return row ? new ApiKey(row) : null;
   }
 

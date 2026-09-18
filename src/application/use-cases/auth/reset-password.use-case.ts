@@ -29,14 +29,17 @@ export class ResetPasswordUseCase {
       throw new UnauthorizedError('Invalid or expired reset token');
     }
 
-    const user = await this.users.findByIdUnscoped(stored.userId);
+    const user = await this.users.findById(stored.tenantId, stored.userId);
     if (!user) {
       throw new UnauthorizedError('Invalid or expired reset token');
     }
 
     const passwordHash = await this.passwordHasher.hash(input.newPassword);
-    await this.users.updatePassword(user.id, passwordHash);
-    await this.resetTokens.markUsed(stored.id);
+    const updatedUser = user.changePasswordHash(passwordHash);
+    const updatedToken = stored.markUsed(this.clock.now());
+
+    await this.users.updatePassword(user.tenantId, updatedUser.id, updatedUser.passwordHash);
+    await this.resetTokens.markUsed(stored.tenantId, updatedToken.id);
     await this.refreshTokens.revokeAllForUser(user.tenantId, user.id);
   }
 }

@@ -17,5 +17,4 @@ export interface ICheckResultRepository {
     targetId: string,
     options: { since: Date; limit: number },
   ): Promise<CheckResult[]>;
-  pruneOlderThan(cutoff: Date): Promise<number>;
 }

@@ -21,7 +21,10 @@ export function registerAlertRoutes(container: Container) {
 
     server.post(
       '/',
-      { preHandler: [...authed, app.requireRole('admin')], schema: { body: createAlertChannelBody } },
+      {
+        preHandler: [...authed, app.requireRole('admin')],
+        schema: { body: createAlertChannelBody },
+      },
       async (request, reply) => {
         const channel = await container.useCases.createAlertChannel.execute({
           tenantId: request.authUser!.tenantId,

@@ -10,6 +10,7 @@ import { GetTargetUseCase } from '../../application/use-cases/targets/get-target
 import { UpdateTargetUseCase } from '../../application/use-cases/targets/update-target.use-case.js';
 import { DeleteTargetUseCase } from '../../application/use-cases/targets/delete-target.use-case.js';
 import { RecordCheckResultUseCase } from '../../application/use-cases/checks/record-check-result.use-case.js';
+import { RunCheckUseCase } from '../../application/use-cases/checks/run-check.use-case.js';
 import { GetTargetHistoryUseCase } from '../../application/use-cases/checks/get-target-history.use-case.js';
 import { GetDashboardSnapshotUseCase } from '../../application/use-cases/checks/get-dashboard-snapshot.use-case.js';
 import { CreateAlertChannelUseCase } from '../../application/use-cases/alerts/create-alert-channel.use-case.js';
@@ -66,14 +67,16 @@ export function createContainer(env: Env, db: Database, logger: Logger) {
   const mailer = new ConsoleMailer(logger);
   const refreshTtlMs = parseDurationMs(env.JWT_REFRESH_TTL);
 
-  const tenants = new DrizzleTenantRepository(db);
-  const users = new DrizzleUserRepository(db);
-  const refreshTokens = new DrizzleRefreshTokenRepository(db);
-  const passwordResetTokens = new DrizzlePasswordResetTokenRepository(db);
-  const targets = new DrizzleTargetRepository(db);
-  const checkResults = new DrizzleCheckResultRepository(db);
-  const alertChannels = new DrizzleAlertChannelRepository(db);
-  const apiKeys = new DrizzleApiKeyRepository(db);
+  const repositories = {
+    tenants: new DrizzleTenantRepository(db),
+    users: new DrizzleUserRepository(db),
+    refreshTokens: new DrizzleRefreshTokenRepository(db),
+    passwordResetTokens: new DrizzlePasswordResetTokenRepository(db),
+    targets: new DrizzleTargetRepository(db),
+    checkResults: new DrizzleCheckResultRepository(db),
+    alertChannels: new DrizzleAlertChannelRepository(db),
+    apiKeys: new DrizzleApiKeyRepository(db),
+  };
 
   const eventBus = new EventBus();
   const metrics = new Metrics();
@@ -97,47 +100,89 @@ export function createContainer(env: Env, db: Database, logger: Logger) {
     resetTimeoutMs: env.CIRCUIT_BREAKER_RESET_TIMEOUT_MS,
   });
   const workerPool = new WorkerPool(env.CHECK_CONCURRENCY);
+  const recordCheckResult = new RecordCheckResultUseCase(repositories.checkResults, eventBus);
 
   const useCases = {
-    registerTenant: new RegisterTenantUseCase(tenants, users, passwordHasher),
-    login: new LoginUseCase(users, refreshTokens, passwordHasher, tokenService, clock, refreshTtlMs),
-    refreshSession: new RefreshSessionUseCase(users, refreshTokens, tokenService, clock, refreshTtlMs),
-    logout: new LogoutUseCase(refreshTokens, tokenService),
-    requestPasswordReset: new RequestPasswordResetUseCase(users, passwordResetTokens, tokenService, mailer, clock),
-    resetPassword: new ResetPasswordUseCase(users, passwordResetTokens, refreshTokens, tokenService, passwordHasher, clock),
+    registerTenant: new RegisterTenantUseCase(
+      repositories.tenants,
+      repositories.users,
+      passwordHasher,
+    ),
+    login: new LoginUseCase(
+      repositories.users,
+      repositories.refreshTokens,
+      passwordHasher,
+      tokenService,
+      clock,
+      refreshTtlMs,
+    ),
+    refreshSession: new RefreshSessionUseCase(
+      repositories.users,
+      repositories.refreshTokens,
+      tokenService,
+      clock,
+      refreshTtlMs,
+    ),
+    logout: new LogoutUseCase(repositories.refreshTokens, tokenService),
+    requestPasswordReset: new RequestPasswordResetUseCase(
+      repositories.users,
+      repositories.passwordResetTokens,
+      tokenService,
+      mailer,
+      clock,
+    ),
+    resetPassword: new ResetPasswordUseCase(
+      repositories.users,
+      repositories.passwordResetTokens,
+      repositories.refreshTokens,
+      tokenService,
+      passwordHasher,
+      clock,
+    ),
 
-    createTarget: new CreateTargetUseCase(targets),
-    listTargets: new ListTargetsUseCase(targets),
-    getTarget: new GetTargetUseCase(targets),
-    updateTarget: new UpdateTargetUseCase(targets),
-    deleteTarget: new DeleteTargetUseCase(targets),
+    createTarget: new CreateTargetUseCase(repositories.targets),
+    listTargets: new ListTargetsUseCase(repositories.targets),
+    getTarget: new GetTargetUseCase(repositories.targets),
+    updateTarget: new UpdateTargetUseCase(repositories.targets),
+    deleteTarget: new DeleteTargetUseCase(repositories.targets),
 
-    recordCheckResult: new RecordCheckResultUseCase(checkResults, eventBus),
-    getTargetHistory: new GetTargetHistoryUseCase(targets, checkResults),
-    getDashboardSnapshot: new GetDashboardSnapshotUseCase(targets, checkResults),
+    recordCheckResult,
+    runCheck: new RunCheckUseCase(checkerFactory, recordCheckResult),
+    getTargetHistory: new GetTargetHistoryUseCase(repositories.targets, repositories.checkResults),
+    getDashboardSnapshot: new GetDashboardSnapshotUseCase(
+      repositories.targets,
+      repositories.checkResults,
+    ),
 
-    createAlertChannel: new CreateAlertChannelUseCase(alertChannels),
-    listAlertChannels: new ListAlertChannelsUseCase(alertChannels),
-    deleteAlertChannel: new DeleteAlertChannelUseCase(alertChannels),
-    dispatchStatusChangeAlerts: new DispatchStatusChangeAlertsUseCase(alertChannels, alerterFactory, logger),
+    createAlertChannel: new CreateAlertChannelUseCase(repositories.alertChannels),
+    listAlertChannels: new ListAlertChannelsUseCase(repositories.alertChannels),
+    deleteAlertChannel: new DeleteAlertChannelUseCase(repositories.alertChannels),
+    dispatchStatusChangeAlerts: new DispatchStatusChangeAlertsUseCase(
+      repositories.alertChannels,
+      alerterFactory,
+      logger,
+    ),
 
-    createApiKey: new CreateApiKeyUseCase(apiKeys, tokenService),
-    listApiKeys: new ListApiKeysUseCase(apiKeys),
-    revokeApiKey: new RevokeApiKeyUseCase(apiKeys),
-    authenticateApiKey: new AuthenticateApiKeyUseCase(apiKeys, tokenService),
+    createApiKey: new CreateApiKeyUseCase(repositories.apiKeys, tokenService),
+    listApiKeys: new ListApiKeysUseCase(repositories.apiKeys),
+    revokeApiKey: new RevokeApiKeyUseCase(repositories.apiKeys),
+    authenticateApiKey: new AuthenticateApiKeyUseCase(repositories.apiKeys, tokenService),
   };
 
   const checkScheduler = new CheckScheduler(
-    targets,
-    checkerFactory,
-    useCases.recordCheckResult,
+    repositories.targets,
+    useCases.runCheck,
     circuitBreakers,
     workerPool,
     logger,
     metrics,
   );
 
-  const alertDispatcher = new AlertDispatcher(eventBus, useCases.dispatchStatusChangeAlerts, logger);
+  const alertDispatcher = new AlertDispatcher(
+    eventBus,
+    useCases.dispatchStatusChangeAlerts,
+    logger,
+  );
 
   return {
     env,

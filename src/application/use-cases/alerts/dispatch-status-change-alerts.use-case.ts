@@ -1,7 +1,7 @@
 import type { AlertChannel } from '../../../domain/entities/alert-channel.entity.js';
+import type { TargetStatusChangedEvent } from '../../../domain/events/domain-events.js';
 import type { IAlertChannelRepository } from '../../../domain/repositories/alert-channel.repository.js';
 import type { IAlerterFactory } from '../../ports/alerter.port.js';
-import type { TargetStatusChangedEvent } from '../../ports/domain-events.js';
 
 export interface AlertDispatchLogger {
   error(context: { channelId: string; error: unknown }, message: string): void;

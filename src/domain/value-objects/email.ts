@@ -12,8 +12,4 @@ export class Email {
     }
     return new Email(normalized);
   }
-
-  toString(): string {
-    return this.value;
-  }
 }

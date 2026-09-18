@@ -1,4 +1,4 @@
-import type { DomainEventMap } from './domain-events.js';
+import type { DomainEventMap } from '../../domain/events/domain-events.js';
 
 export type Unsubscribe = () => void;
 

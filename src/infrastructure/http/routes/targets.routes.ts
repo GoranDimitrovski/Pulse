@@ -86,7 +86,10 @@ export function registerTargetRoutes(container: Container) {
       '/:id',
       { preHandler: [...authed, app.requireRole('admin')], schema: { params: idParams } },
       async (request, reply) => {
-        await container.useCases.deleteTarget.execute(request.authUser!.tenantId, request.params.id);
+        await container.useCases.deleteTarget.execute(
+          request.authUser!.tenantId,
+          request.params.id,
+        );
         reply.status(204).send();
       },
     );

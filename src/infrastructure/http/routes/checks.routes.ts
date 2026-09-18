@@ -7,7 +7,12 @@ import type { Container } from '../../composition/container.js';
 const idParams = z.object({ id: z.string().uuid() });
 
 const historyQuery = z.object({
-  sinceHours: z.coerce.number().int().min(1).max(24 * 30).default(24),
+  sinceHours: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 30)
+    .default(24),
   limit: z.coerce.number().int().min(1).max(1000).default(200),
 });
 

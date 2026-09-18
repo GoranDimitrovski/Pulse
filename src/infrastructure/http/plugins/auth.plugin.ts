@@ -50,7 +50,7 @@ async function resolveAuthUser(
   if (apiKey) {
     const record = await deps.authenticateApiKey.execute(apiKey);
     if (!record) return null;
-    // ponytail: API keys carry a fixed 'member' role; add per-key scopes if finer-grained
+    // API keys carry a fixed 'member' role; add per-key scopes if finer-grained
     // programmatic permissions are needed later.
     return { tenantId: record.tenantId, userId: record.id, role: 'member' };
   }

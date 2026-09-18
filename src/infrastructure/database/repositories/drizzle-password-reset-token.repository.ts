@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { PasswordResetToken } from '../../../domain/entities/password-reset-token.entity.js';
 import type {
@@ -25,10 +25,10 @@ export class DrizzlePasswordResetTokenRepository implements IPasswordResetTokenR
     return row ? new PasswordResetToken(row) : null;
   }
 
-  async markUsed(id: string): Promise<void> {
+  async markUsed(tenantId: string, id: string): Promise<void> {
     await this.db
       .update(passwordResetTokens)
       .set({ usedAt: new Date() })
-      .where(eq(passwordResetTokens.id, id));
+      .where(and(eq(passwordResetTokens.tenantId, tenantId), eq(passwordResetTokens.id, id)));
   }
 }

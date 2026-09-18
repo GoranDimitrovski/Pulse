@@ -8,8 +8,15 @@ import type {
 
 export class InMemoryCheckResultRepository implements ICheckResultRepository {
   readonly results: CheckResult[] = [];
+  /** Set to simulate the insert failing, e.g. the FK violation when a target is deleted mid-check. */
+  failNextCreate: Error | null = null;
 
   async create(input: CreateCheckResultInput): Promise<CheckResult> {
+    if (this.failNextCreate) {
+      const error = this.failNextCreate;
+      this.failNextCreate = null;
+      throw error;
+    }
     const result = new CheckResult({ id: randomUUID(), checkedAt: new Date(), ...input });
     this.results.push(result);
     return result;
@@ -45,13 +52,5 @@ export class InMemoryCheckResultRepository implements ICheckResultRepository {
       )
       .sort((a, b) => b.checkedAt.getTime() - a.checkedAt.getTime())
       .slice(0, options.limit);
-  }
-
-  async pruneOlderThan(cutoff: Date): Promise<number> {
-    const before = this.results.length;
-    const kept = this.results.filter((r) => r.checkedAt >= cutoff);
-    this.results.length = 0;
-    this.results.push(...kept);
-    return before - kept.length;
   }
 }

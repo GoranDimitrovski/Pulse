@@ -1,0 +1,32 @@
+{
+  "worktree": {
+    "symlinkDirectories": ["node_modules", "web/node_modules"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-edit-guard.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-edit-check.mjs",
+            "timeout": 30,
+            "statusMessage": "Running Prettier/tsc/ESLint on the edited file..."
+          }
+        ]
+      }
+    ]
+  }
+}

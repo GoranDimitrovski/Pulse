@@ -36,6 +36,7 @@ export class RequestPasswordResetUseCase {
 
     const resetToken = this.tokenService.generateOpaqueToken();
     await this.resetTokens.create({
+      tenantId: user.tenantId,
       userId: user.id,
       tokenHash: this.tokenService.hashOpaqueToken(resetToken),
       expiresAt: new Date(this.clock.now().getTime() + RESET_TOKEN_TTL_MS),

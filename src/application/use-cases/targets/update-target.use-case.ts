@@ -14,14 +14,17 @@ export class UpdateTargetUseCase {
       throw new NotFoundError('Target', targetId);
     }
 
-    if (input.config) {
-      Target.validateConfig(existing.type, input.config);
-    }
-
-    const updated = await this.targets.update(tenantId, targetId, input);
-    if (!updated) {
+    const updated = existing.update(input);
+    const persisted = await this.targets.update(tenantId, targetId, {
+      name: updated.name,
+      config: updated.config,
+      intervalSeconds: updated.intervalSeconds,
+      timeoutMs: updated.timeoutMs,
+      enabled: updated.enabled,
+    });
+    if (!persisted) {
       throw new NotFoundError('Target', targetId);
     }
-    return updated;
+    return persisted;
   }
 }

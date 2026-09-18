@@ -9,8 +9,6 @@ export interface UserProps {
   readonly createdAt: Date;
 }
 
-export type PublicUser = Omit<UserProps, 'passwordHash'>;
-
 export class User {
   readonly id: string;
   readonly tenantId: string;
@@ -28,9 +26,7 @@ export class User {
     this.createdAt = props.createdAt;
   }
 
-  /** Never serialize passwordHash to a client — this is the one place that decides what "public" means. */
-  toPublic(): PublicUser {
-    const { passwordHash: _passwordHash, ...publicUser } = this;
-    return publicUser;
+  changePasswordHash(passwordHash: string): User {
+    return new User({ ...this, passwordHash });
   }
 }

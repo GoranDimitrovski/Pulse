@@ -28,19 +28,33 @@ const resetPasswordBody = z.object({
   newPassword: z.string().min(8).max(200),
 });
 
+/**
+ * The credential-guessing routes get their own bucket, far below the app-wide 100/min:
+ * an unauthenticated endpoint that checks a password is a brute-force oracle otherwise.
+ */
+const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } };
+
 export function registerAuthRoutes(container: Container) {
   return async function authRoutes(app: FastifyInstance) {
     const server = app.withTypeProvider<ZodTypeProvider>();
 
-    server.post('/register', { schema: { body: registerBody } }, async (request, reply) => {
-      const result = await container.useCases.registerTenant.execute(request.body);
-      reply.status(201).send(result);
-    });
+    server.post(
+      '/register',
+      { ...authRateLimit, schema: { body: registerBody } },
+      async (request, reply) => {
+        const result = await container.useCases.registerTenant.execute(request.body);
+        reply.status(201).send(result);
+      },
+    );
 
-    server.post('/login', { schema: { body: loginBody } }, async (request, reply) => {
-      const tokens = await container.useCases.login.execute(request.body);
-      reply.status(200).send(tokens);
-    });
+    server.post(
+      '/login',
+      { ...authRateLimit, schema: { body: loginBody } },
+      async (request, reply) => {
+        const tokens = await container.useCases.login.execute(request.body);
+        reply.status(200).send(tokens);
+      },
+    );
 
     server.post('/refresh', { schema: { body: refreshBody } }, async (request, reply) => {
       const tokens = await container.useCases.refreshSession.execute(request.body);
@@ -54,7 +68,7 @@ export function registerAuthRoutes(container: Container) {
 
     server.post(
       '/password-reset/request',
-      { schema: { body: requestResetBody } },
+      { ...authRateLimit, schema: { body: requestResetBody } },
       async (request, reply) => {
         await container.useCases.requestPasswordReset.execute(request.body);
         reply.status(202).send({ message: 'If the email exists, a reset link has been sent' });
@@ -63,7 +77,7 @@ export function registerAuthRoutes(container: Container) {
 
     server.post(
       '/password-reset/confirm',
-      { schema: { body: resetPasswordBody } },
+      { ...authRateLimit, schema: { body: resetPasswordBody } },
       async (request, reply) => {
         await container.useCases.resetPassword.execute(request.body);
         reply.status(200).send({ message: 'Password updated' });

@@ -33,10 +33,6 @@ export class ConnectionManager {
     }
   }
 
-  connectionCount(tenantId: string): number {
-    return this.connectionsByTenant.get(tenantId)?.size ?? 0;
-  }
-
   closeAll(): void {
     for (const sockets of this.connectionsByTenant.values()) {
       for (const socket of sockets) {

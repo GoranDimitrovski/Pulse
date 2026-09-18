@@ -1,0 +1,29 @@
+# aws | azure | gcp — only affects Service load-balancer annotations.
+cloud: aws
+
+image:
+  repository: REPLACE_WITH_REGISTRY_URL
+  tag: latest
+
+# Must stay 1: each pod runs its own in-process CheckScheduler (src/main.ts), so N replicas
+# means every target is checked N times per interval and every status change fires N alerts.
+# The migrate initContainer would race across pods too. Raise this only once the scheduler
+# takes a Postgres advisory lock per tick.
+replicas: 1
+
+# Secret holding DATABASE_URL / JWT_ACCESS_SECRET / CORS_ORIGIN.
+# Created by Terraform (kubernetes_secret.app); the chart only references it.
+envSecret: pulse-env
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+service:
+  port: 80
+  # AWS only: ACM cert ARN -> TLS terminated at the NLB on 443. Empty = plain HTTP.
+  # Azure/GCP: terminate TLS at an Ingress (cert-manager / managed cert) instead.
+  tlsCertArn: ""

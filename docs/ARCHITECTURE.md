@@ -250,9 +250,8 @@ sequenceDiagram
 - **API keys** (`X-API-Key` header) are an alternative to JWTs for programmatic access,
   scoped to a tenant, stored as a hash plus a short lookup prefix (Stripe-style),
   verified with a constant-time comparison. They carry a fixed `member` role today — see
-  the `ponytail` note in
-  [`auth.plugin.ts`](../src/infrastructure/http/plugins/auth.plugin.ts) for the upgrade
-  path to per-key scopes.
+  the note in [`auth.plugin.ts`](../src/infrastructure/http/plugins/auth.plugin.ts) for the
+  upgrade path to per-key scopes.
 - **Password reset** is a basic token-based flow (`request` issues and logs a one-hour
   opaque token; `confirm` sets a new password and revokes all of that user's refresh
   tokens). No real email provider is wired up — see

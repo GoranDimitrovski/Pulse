@@ -17,6 +17,14 @@ const envSchema = z.object({
   CIRCUIT_BREAKER_RESET_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
 
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+
+  /**
+   * Which upstream addresses may set X-Forwarded-For: a comma-separated list of IPs/CIDRs,
+   * or a proxy-addr preset like 'loopback'. Rate limiting is keyed on the client IP, so
+   * trusting the header unconditionally lets anyone mint a fresh bucket per request just by
+   * sending one. Empty (the default) ignores the header and uses the socket address.
+   */
+  TRUST_PROXY: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

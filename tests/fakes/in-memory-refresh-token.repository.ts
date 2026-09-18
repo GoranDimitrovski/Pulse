@@ -10,7 +10,12 @@ export class InMemoryRefreshTokenRepository implements IRefreshTokenRepository {
   readonly tokens: RefreshToken[] = [];
 
   async create(input: CreateRefreshTokenInput): Promise<RefreshToken> {
-    const token = new RefreshToken({ id: randomUUID(), revokedAt: null, createdAt: new Date(), ...input });
+    const token = new RefreshToken({
+      id: randomUUID(),
+      revokedAt: null,
+      createdAt: new Date(),
+      ...input,
+    });
     this.tokens.push(token);
     return token;
   }

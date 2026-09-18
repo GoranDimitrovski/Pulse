@@ -6,7 +6,11 @@ import { requestContext } from '../../context/request-context.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    withTenantContext: (request: FastifyRequest, reply: FastifyReply, done: (err?: Error) => void) => void;
+    withTenantContext: (
+      request: FastifyRequest,
+      reply: FastifyReply,
+      done: (err?: Error) => void,
+    ) => void;
   }
 }
 

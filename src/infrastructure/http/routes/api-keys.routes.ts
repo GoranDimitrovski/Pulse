@@ -23,20 +23,27 @@ export function registerApiKeyRoutes(container: Container) {
           tenantId: request.authUser!.tenantId,
           name: request.body.name,
         });
-        reply.status(201).send({ ...apiKey, plainTextKey });
+        reply.status(201).send({ ...apiKey.toPublic(), plainTextKey });
       },
     );
 
-    server.get('/', { preHandler: [...authed, app.requireRole('admin')] }, async (request, reply) => {
-      const keys = await container.useCases.listApiKeys.execute(request.authUser!.tenantId);
-      reply.status(200).send(keys);
-    });
+    server.get(
+      '/',
+      { preHandler: [...authed, app.requireRole('admin')] },
+      async (request, reply) => {
+        const keys = await container.useCases.listApiKeys.execute(request.authUser!.tenantId);
+        reply.status(200).send(keys.map((key) => key.toPublic()));
+      },
+    );
 
     server.delete(
       '/:id',
       { preHandler: [...authed, app.requireRole('owner')], schema: { params: idParams } },
       async (request, reply) => {
-        await container.useCases.revokeApiKey.execute(request.authUser!.tenantId, request.params.id);
+        await container.useCases.revokeApiKey.execute(
+          request.authUser!.tenantId,
+          request.params.id,
+        );
         reply.status(204).send();
       },
     );

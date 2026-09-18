@@ -1,4 +1,7 @@
-import type { AlertChannel, AlertChannelType } from '../../../domain/entities/alert-channel.entity.js';
+import type {
+  AlertChannel,
+  AlertChannelType,
+} from '../../../domain/entities/alert-channel.entity.js';
 import type { IAlertChannelRepository } from '../../../domain/repositories/alert-channel.repository.js';
 
 export interface CreateAlertChannelInput {

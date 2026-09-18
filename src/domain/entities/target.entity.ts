@@ -29,6 +29,15 @@ export interface TargetProps {
   readonly updatedAt: Date;
 }
 
+export interface TargetUpdateInput {
+  readonly name?: string;
+  readonly type?: CheckType;
+  readonly config?: TargetConfig;
+  readonly intervalSeconds?: number;
+  readonly timeoutMs?: number;
+  readonly enabled?: boolean;
+}
+
 export class Target {
   readonly id: string;
   readonly tenantId: string;
@@ -83,5 +92,23 @@ export class Target {
         }
         return;
     }
+  }
+
+  update(input: TargetUpdateInput): Target {
+    const nextType = input.type ?? this.type;
+    const nextConfig = input.config ?? this.config;
+
+    Target.validateConfig(nextType, nextConfig);
+
+    return new Target({
+      ...this,
+      name: input.name ?? this.name,
+      type: nextType,
+      config: nextConfig,
+      intervalSeconds: input.intervalSeconds ?? this.intervalSeconds,
+      timeoutMs: input.timeoutMs ?? this.timeoutMs,
+      enabled: input.enabled ?? this.enabled,
+      updatedAt: new Date(),
+    });
   }
 }

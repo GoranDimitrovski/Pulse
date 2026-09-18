@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AuthenticateApiKeyUseCase } from '../../../src/application/use-cases/api-keys/authenticate-api-key.use-case.js';
 import { CreateApiKeyUseCase } from '../../../src/application/use-cases/api-keys/create-api-key.use-case.js';
+import { KEY_PREFIX_LENGTH } from '../../../src/domain/entities/api-key.entity.js';
 import { FakeTokenService } from '../../fakes/fake-token-service.js';
 import { InMemoryApiKeyRepository } from '../../fakes/in-memory-api-key.repository.js';
 
@@ -46,7 +47,9 @@ describe('AuthenticateApiKeyUseCase', () => {
 
   it('rejects a key whose prefix matches but whose secret does not', async () => {
     const { plainTextKey } = await createUseCase.execute({ tenantId: 'tenant-1', name: 'ci-key' });
-    const forged = plainTextKey.slice(0, 8) + 'x'.repeat(plainTextKey.length - 8);
+    const forged =
+      plainTextKey.slice(0, KEY_PREFIX_LENGTH) +
+      'x'.repeat(plainTextKey.length - KEY_PREFIX_LENGTH);
 
     expect(await useCase.execute(forged)).toBeNull();
   });

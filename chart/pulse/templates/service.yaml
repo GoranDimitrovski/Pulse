@@ -1,0 +1,27 @@
+# Plain LoadBalancer Service. Azure/GCP provision an L4 LB with no annotations;
+# AWS gets an NLB (+ optional ACM TLS).
+# Swap for an Ingress when you need host/path routing or managed certs.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulse
+  {{- if eq .Values.cloud "aws" }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    {{- with .Values.service.tlsCertArn }}
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ . | quote }}
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    {{- end }}
+  {{- end }}
+spec:
+  type: LoadBalancer
+  selector: { app: pulse }
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: 3000
+    {{- if and (eq .Values.cloud "aws") .Values.service.tlsCertArn }}
+    - name: https
+      port: 443
+      targetPort: 3000
+    {{- end }}

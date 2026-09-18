@@ -1,5 +1,13 @@
 import { timingSafeEqual } from 'node:crypto';
 
+/**
+ * How much of the plaintext key is kept as the lookup prefix. `key_prefix` carries a UNIQUE
+ * index, so this has to be wide enough that two issued keys never collide: 'pk_' + 13 hex
+ * chars is ~52 bits of entropy, where an 8-char prefix left only 20 — a birthday collision
+ * (and an unhandled unique violation on create) at barely a thousand keys.
+ */
+export const KEY_PREFIX_LENGTH = 16;
+
 export interface ApiKeyProps {
   readonly id: string;
   readonly tenantId: string;
@@ -10,6 +18,9 @@ export interface ApiKeyProps {
   readonly revokedAt: Date | null;
   readonly createdAt: Date;
 }
+
+/** Everything a client may see — the stored hash is not part of it. */
+export type PublicApiKey = Omit<ApiKeyProps, 'keyHash'>;
 
 export class ApiKey {
   readonly id: string;
@@ -34,6 +45,12 @@ export class ApiKey {
 
   isRevoked(): boolean {
     return this.revokedAt !== null;
+  }
+
+  /** Never serialize keyHash to a client — this is the one place that decides what "public" means. */
+  toPublic(): PublicApiKey {
+    const { keyHash: _keyHash, ...publicKey } = this;
+    return publicKey;
   }
 
   /**

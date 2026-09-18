@@ -1,0 +1,2 @@
+region      = "eu-central-1"
+cors_origin = "https://pulse.example.com"

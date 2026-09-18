@@ -43,7 +43,12 @@ describe('GetTargetHistoryUseCase', () => {
     const useCase = new GetTargetHistoryUseCase(targets, checkResults);
 
     await expect(
-      useCase.execute({ tenantId: 'tenant-1', targetId: 'missing-id', since: new Date(0), limit: 10 }),
+      useCase.execute({
+        tenantId: 'tenant-1',
+        targetId: 'missing-id',
+        since: new Date(0),
+        limit: 10,
+      }),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

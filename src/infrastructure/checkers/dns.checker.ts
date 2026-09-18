@@ -17,10 +17,7 @@ export class DnsChecker implements IHealthChecker {
     const startedAt = performance.now();
 
     try {
-      const records = await this.withTimeout(
-        resolver.resolve(host, recordType),
-        target.timeoutMs,
-      );
+      const records = await this.withTimeout(resolver.resolve(host, recordType), target.timeoutMs);
       const latencyMs = Math.round(performance.now() - startedAt);
       const hasRecords = Array.isArray(records) ? records.length > 0 : Boolean(records);
 

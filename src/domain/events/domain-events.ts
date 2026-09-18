@@ -1,4 +1,4 @@
-import type { CheckResult, CheckStatus } from '../../domain/entities/check-result.entity.js';
+import type { CheckResult, CheckStatus } from '../entities/check-result.entity.js';
 
 export interface CheckCompletedEvent {
   readonly tenantId: string;

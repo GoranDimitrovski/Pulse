@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulse
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels: { app: pulse }
+  template:
+    metadata:
+      labels: { app: pulse }
+    spec:
+      # Runs pending Drizzle migrations before the app container starts.
+      initContainers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["npm", "run", "db:migrate:prod"]
+          envFrom:
+            - secretRef: { name: {{ .Values.envSecret }} }
+      containers:
+        - name: pulse
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef: { name: {{ .Values.envSecret }} }
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "3000" }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 3000 }
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 3000 }
+            initialDelaySeconds: 15
+          resources: {{ toYaml .Values.resources | nindent 12 }}

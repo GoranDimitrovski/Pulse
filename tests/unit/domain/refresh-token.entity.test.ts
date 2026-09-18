@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { RefreshToken } from '../../../src/domain/entities/refresh-token.entity.js';
 
-function makeToken(overrides: Partial<{ revokedAt: Date | null; expiresAt: Date }> = {}): RefreshToken {
+function makeToken(
+  overrides: Partial<{ revokedAt: Date | null; expiresAt: Date }> = {},
+): RefreshToken {
   return new RefreshToken({
     id: 'token-1',
     tenantId: 'tenant-1',
@@ -15,11 +17,17 @@ function makeToken(overrides: Partial<{ revokedAt: Date | null; expiresAt: Date 
   });
 }
 
-describe('RefreshToken.isValid', () => {
+describe('RefreshToken aggregate', () => {
   const now = new Date('2026-01-01T12:00:00.000Z');
 
   it('is valid before expiry and when not revoked', () => {
     expect(makeToken().isValid(now)).toBe(true);
+  });
+
+  it('revokes itself as a single aggregate mutation', () => {
+    const revoked = makeToken().revoke(now);
+    expect(revoked.revokedAt).toEqual(now);
+    expect(revoked.isRevoked()).toBe(true);
   });
 
   it('is invalid once revoked', () => {

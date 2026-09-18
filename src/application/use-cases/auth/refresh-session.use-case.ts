@@ -36,7 +36,8 @@ export class RefreshSessionUseCase {
       throw new UnauthorizedError('Invalid or expired refresh token');
     }
 
-    await this.refreshTokens.revoke(stored.id);
+    const revokedToken = stored.revoke(this.clock.now());
+    await this.refreshTokens.revoke(revokedToken.id);
 
     const accessToken = this.tokenService.signAccessToken({
       sub: user.id,

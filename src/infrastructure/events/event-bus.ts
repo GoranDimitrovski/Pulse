@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 
-import type { DomainEventMap } from '../../application/ports/domain-events.js';
+import type { DomainEventMap } from '../../domain/events/domain-events.js';
 import type { IEventBus, Unsubscribe } from '../../application/ports/event-bus.port.js';
 
 export class EventBus implements IEventBus {

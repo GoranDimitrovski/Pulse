@@ -1,5 +1,5 @@
 import type { AlertChannel, AlertChannelType } from '../../domain/entities/alert-channel.entity.js';
-import type { TargetStatusChangedEvent } from './domain-events.js';
+import type { TargetStatusChangedEvent } from '../../domain/events/domain-events.js';
 
 /** Strategy interface: one implementation per alert channel type. */
 export interface IAlerter {

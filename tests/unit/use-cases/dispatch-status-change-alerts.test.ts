@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IAlerter, IAlerterFactory } from '../../../src/application/ports/alerter.port.js';
-import type { TargetStatusChangedEvent } from '../../../src/application/ports/domain-events.js';
+import type { TargetStatusChangedEvent } from '../../../src/domain/events/domain-events.js';
 import { DispatchStatusChangeAlertsUseCase } from '../../../src/application/use-cases/alerts/dispatch-status-change-alerts.use-case.js';
-import type { AlertChannel, AlertChannelType } from '../../../src/domain/entities/alert-channel.entity.js';
+import type {
+  AlertChannel,
+  AlertChannelType,
+} from '../../../src/domain/entities/alert-channel.entity.js';
 import { InMemoryAlertChannelRepository } from '../../fakes/in-memory-alert-channel.repository.js';
 
 class RecordingAlerter implements IAlerter {
@@ -84,7 +87,9 @@ describe('DispatchStatusChangeAlertsUseCase', () => {
         ['slack', slackAlerter],
       ]),
     );
-    const useCase = new DispatchStatusChangeAlertsUseCase(alertChannels, factory, { error: () => undefined });
+    const useCase = new DispatchStatusChangeAlertsUseCase(alertChannels, factory, {
+      error: () => undefined,
+    });
 
     await useCase.execute(makeEvent('tenant-1'));
 

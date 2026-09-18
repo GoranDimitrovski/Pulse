@@ -30,17 +30,10 @@ export class DrizzleUserRepository implements IUserRepository {
     return row ? new User(row) : null;
   }
 
-  async findByIdUnscoped(userId: string): Promise<User | null> {
-    const [row] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
-    return row ? new User(row) : null;
-  }
-
-  async listByTenant(tenantId: string): Promise<User[]> {
-    const rows = await this.db.select().from(users).where(eq(users.tenantId, tenantId));
-    return rows.map((row) => new User(row));
-  }
-
-  async updatePassword(userId: string, passwordHash: string): Promise<void> {
-    await this.db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+  async updatePassword(tenantId: string, userId: string, passwordHash: string): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ passwordHash })
+      .where(and(eq(users.tenantId, tenantId), eq(users.id, userId)));
   }
 }

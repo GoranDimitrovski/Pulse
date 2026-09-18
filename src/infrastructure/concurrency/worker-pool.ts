@@ -3,7 +3,7 @@
  * spawned ping processes). A fixed number of "worker slots" pull tasks off an internal
  * queue, capping how many checks run at once regardless of how many targets exist.
  *
- * ponytail: this is an async semaphore, not an OS worker_threads pool — the work here is
+ * This is an async semaphore, not an OS worker_threads pool — the work here is
  * I/O-bound (network calls), where Node's event loop already parallelizes fine; threads
  * would only add serialization overhead. Swap in piscina if checks become CPU-bound
  * (e.g. heavy response-body parsing).
@@ -21,14 +21,6 @@ export class WorkerPool {
     } finally {
       this.release();
     }
-  }
-
-  get activeCount(): number {
-    return this.running;
-  }
-
-  get queuedCount(): number {
-    return this.queue.length;
   }
 
   private acquire(): Promise<void> {

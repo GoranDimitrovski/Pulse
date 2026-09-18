@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt } from 'drizzle-orm';
+import { and, desc, eq, gte } from 'drizzle-orm';
 
 import { CheckResult } from '../../../domain/entities/check-result.entity.js';
 import type {
@@ -53,13 +53,5 @@ export class DrizzleCheckResultRepository implements ICheckResultRepository {
       .orderBy(desc(checkResults.checkedAt))
       .limit(options.limit);
     return rows.map((row) => new CheckResult(row));
-  }
-
-  async pruneOlderThan(cutoff: Date): Promise<number> {
-    const result = await this.db
-      .delete(checkResults)
-      .where(lt(checkResults.checkedAt, cutoff))
-      .returning({ id: checkResults.id });
-    return result.length;
   }
 }

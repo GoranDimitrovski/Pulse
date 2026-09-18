@@ -25,7 +25,7 @@ describe('RevokeApiKeyUseCase', () => {
     await expect(useCase.execute('tenant-1', 'missing-id')).rejects.toBeInstanceOf(NotFoundError);
   });
 
-  it("throws NotFoundError when the key belongs to a different tenant", async () => {
+  it('throws NotFoundError when the key belongs to a different tenant', async () => {
     const apiKeys = new InMemoryApiKeyRepository();
     const key = await apiKeys.create({
       tenantId: 'tenant-1',

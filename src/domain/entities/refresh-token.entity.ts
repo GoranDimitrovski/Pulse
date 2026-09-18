@@ -27,6 +27,17 @@ export class RefreshToken {
     this.createdAt = props.createdAt;
   }
 
+  revoke(now: Date = new Date()): RefreshToken {
+    if (this.isRevoked()) {
+      return this;
+    }
+    return new RefreshToken({ ...this, revokedAt: now });
+  }
+
+  isRevoked(): boolean {
+    return this.revokedAt !== null;
+  }
+
   /** Not revoked, and not past its expiry, as of `now`. */
   isValid(now: Date): boolean {
     return this.revokedAt === null && this.expiresAt >= now;

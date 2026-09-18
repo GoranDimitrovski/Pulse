@@ -23,16 +23,8 @@ export class InMemoryUserRepository implements IUserRepository {
     return this.users.find((u) => u.email === email) ?? null;
   }
 
-  async findByIdUnscoped(userId: string): Promise<User | null> {
-    return this.users.find((u) => u.id === userId) ?? null;
-  }
-
-  async listByTenant(tenantId: string): Promise<User[]> {
-    return this.users.filter((u) => u.tenantId === tenantId);
-  }
-
-  async updatePassword(userId: string, passwordHash: string): Promise<void> {
-    const index = this.users.findIndex((u) => u.id === userId);
+  async updatePassword(tenantId: string, userId: string, passwordHash: string): Promise<void> {
+    const index = this.users.findIndex((u) => u.tenantId === tenantId && u.id === userId);
     if (index !== -1) {
       this.users[index] = new User({ ...this.users[index]!, passwordHash });
     }

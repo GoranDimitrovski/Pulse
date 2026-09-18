@@ -18,13 +18,6 @@ export class Metrics {
     registers: [this.registry],
   });
 
-  readonly httpRequestsTotal = new Counter({
-    name: 'pulse_http_requests_total',
-    help: 'Total HTTP requests handled',
-    labelNames: ['method', 'route', 'statusCode'] as const,
-    registers: [this.registry],
-  });
-
   constructor() {
     collectDefaultMetrics({ register: this.registry, prefix: 'pulse_' });
   }

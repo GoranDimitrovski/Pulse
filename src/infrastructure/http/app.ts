@@ -7,7 +7,11 @@ import sensible from '@fastify/sensible';
 import staticPlugin from '@fastify/static';
 import websocketPlugin from '@fastify/websocket';
 import fastify from 'fastify';
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from '@fastify/type-provider-zod';
+import {
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from '@fastify/type-provider-zod';
 
 import type { Container } from '../composition/container.js';
 import type { Logger } from '../logging/logger.js';
@@ -31,7 +35,9 @@ export async function buildApp(container: Container, logger: Logger) {
   const app = fastify({
     loggerInstance: logger,
     genReqId: () => crypto.randomUUID(),
-    trustProxy: true,
+    // `false` = ignore X-Forwarded-For entirely. Trusting it unconditionally would make the
+    // rate limiter's IP key client-controlled; only named upstreams get to set it.
+    trustProxy: container.env.TRUST_PROXY || false,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
@@ -47,7 +53,10 @@ export async function buildApp(container: Container, logger: Logger) {
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
   await app.register(websocketPlugin);
   await app.register(
-    createAuthPlugin({ tokenService: container.tokenService, authenticateApiKey: container.useCases.authenticateApiKey }),
+    createAuthPlugin({
+      tokenService: container.tokenService,
+      authenticateApiKey: container.useCases.authenticateApiKey,
+    }),
   );
   await app.register(tenantContextPlugin);
   await app.register(rbacPlugin);

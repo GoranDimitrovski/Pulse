@@ -2,7 +2,10 @@ import { randomBytes, createHash } from 'node:crypto';
 
 import { createSigner, createVerifier } from 'fast-jwt';
 
-import type { AccessTokenPayload, ITokenService } from '../../application/ports/token-service.port.js';
+import type {
+  AccessTokenPayload,
+  ITokenService,
+} from '../../application/ports/token-service.port.js';
 import { UnauthorizedError } from '../../domain/errors/domain-error.js';
 import { parseDurationMs } from '../../shared/duration.js';
 

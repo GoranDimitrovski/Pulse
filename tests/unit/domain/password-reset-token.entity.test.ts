@@ -7,6 +7,7 @@ function makeToken(
 ): PasswordResetToken {
   return new PasswordResetToken({
     id: 'reset-1',
+    tenantId: 'tenant-1',
     userId: 'user-1',
     tokenHash: 'hash',
     expiresAt: new Date('2026-01-01T02:00:00.000Z'),
@@ -16,11 +17,17 @@ function makeToken(
   });
 }
 
-describe('PasswordResetToken.isValid', () => {
+describe('PasswordResetToken aggregate', () => {
   const now = new Date('2026-01-01T01:30:00.000Z');
 
   it('is valid before expiry and when unused', () => {
     expect(makeToken().isValid(now)).toBe(true);
+  });
+
+  it('marks itself used as a single aggregate mutation', () => {
+    const used = makeToken().markUsed(now);
+    expect(used.usedAt).toEqual(now);
+    expect(used.isValid(now)).toBe(false);
   });
 
   it('is invalid once used', () => {

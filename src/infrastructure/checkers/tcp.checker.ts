@@ -9,7 +9,11 @@ export class TcpChecker implements IHealthChecker {
   async check(target: Target): Promise<CheckOutcome> {
     const { host, port } = target.config;
     if (!host || !port) {
-      return { status: 'down', latencyMs: null, message: "Target is missing 'host' or 'port' config" };
+      return {
+        status: 'down',
+        latencyMs: null,
+        message: "Target is missing 'host' or 'port' config",
+      };
     }
 
     const startedAt = performance.now();
@@ -23,7 +27,11 @@ export class TcpChecker implements IHealthChecker {
 
       socket.setTimeout(target.timeoutMs);
       socket.once('connect', () => {
-        finish({ status: 'up', latencyMs: Math.round(performance.now() - startedAt), message: null });
+        finish({
+          status: 'up',
+          latencyMs: Math.round(performance.now() - startedAt),
+          message: null,
+        });
       });
       socket.once('timeout', () => {
         finish({ status: 'down', latencyMs: null, message: 'Connection timed out' });

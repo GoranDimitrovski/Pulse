@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 
-import type { AlertChannel } from '../../../domain/entities/alert-channel.entity.js';
+import { AlertChannel } from '../../../domain/entities/alert-channel.entity.js';
 import type {
   CreateAlertChannelInput,
   IAlertChannelRepository,
@@ -13,15 +13,23 @@ export class DrizzleAlertChannelRepository implements IAlertChannelRepository {
 
   async create(input: CreateAlertChannelInput): Promise<AlertChannel> {
     const [row] = await this.db.insert(alertChannels).values(input).returning();
-    return row!;
+    return new AlertChannel(row!);
   }
 
   async listByTenant(tenantId: string): Promise<AlertChannel[]> {
-    return this.db.select().from(alertChannels).where(eq(alertChannels.tenantId, tenantId));
+    return this.db
+      .select()
+      .from(alertChannels)
+      .where(eq(alertChannels.tenantId, tenantId))
+      .then((rows) => rows.map((row) => new AlertChannel(row)));
   }
 
   async listAllEnabled(): Promise<AlertChannel[]> {
-    return this.db.select().from(alertChannels).where(eq(alertChannels.enabled, true));
+    return this.db
+      .select()
+      .from(alertChannels)
+      .where(eq(alertChannels.enabled, true))
+      .then((rows) => rows.map((row) => new AlertChannel(row)));
   }
 
   async delete(tenantId: string, id: string): Promise<boolean> {

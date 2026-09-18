@@ -14,8 +14,4 @@ export class CircuitBreakerRegistry {
     }
     return breaker;
   }
-
-  remove(targetId: string): void {
-    this.breakers.delete(targetId);
-  }
 }
