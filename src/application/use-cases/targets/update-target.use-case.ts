@@ -1,5 +1,5 @@
 import { NotFoundError } from '../../../domain/errors/domain-error.js';
-import { Target } from '../../../domain/entities/target.entity.js';
+import type { Target } from '../../../domain/entities/target.entity.js';
 import type {
   ITargetRepository,
   UpdateTargetInput,
